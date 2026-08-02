@@ -1,10 +1,10 @@
 const express = require('express')
 const app = express()
 var morgan = require('morgan')
-const cors = require('cors')
+// const cors = require('cors')
 
 app.use(express.json())
-app.use(cors())
+// app.use(cors())
 app.use(express.static('dist'))
 
 morgan.token('entry', function getEntry(req) {
@@ -38,7 +38,7 @@ let persons = [
 ]
 
 app.get('/', (request, response) => {
-    response.send('<h1>Phonebook Backend!</h1>')
+    response.send('<h1>Phonebook Backend</h1>')
 })
 
 app.get('/api/persons', (request, response) => {
