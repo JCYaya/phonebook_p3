@@ -1,0 +1,117 @@
+const express = require('express')
+const app = express()
+var morgan = require('morgan')
+const cors = require('cors')
+
+app.use(express.json())
+app.use(cors())
+
+morgan.token('entry', function getEntry(req) {
+    return JSON.stringify(req.body)
+})
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :entry'))
+
+
+let persons = [
+    {
+        "id": "1",
+        "name": "Arto Hellas",
+        "number": "040-123456"
+    },
+    {
+        "id": "2",
+        "name": "Ada Lovelace",
+        "number": "39-44-5323523"
+    },
+    {
+        "id": "3",
+        "name": "Dan Abramov",
+        "number": "12-43-234345"
+    },
+    {
+        "id": "4",
+        "name": "Mary Poppendieck",
+        "number": "39-23-6423122"
+    }
+]
+
+app.get('/api/persons', (request, response) => {
+    response.json(persons)
+})
+
+app.get('/info', (request, response) => {
+    let recv_time = Date.now();
+    const dateToString = new Date(recv_time).toString();
+    let num_people = persons.length;
+    response.send(`<p>Phonebook has info for ${num_people} people.<br>${dateToString}</p>`)
+})
+
+app.get('/api/persons/:id', (request, response) => {
+    const id = request.params.id
+    const person = persons.find(p => p.id === id)
+    if (person) {
+        response.json(person)
+    } else {
+        response.statusMessage = "Resource does not exist.";
+        response.status(404).end()
+    }
+})
+
+app.delete('/api/persons/:id', (request, response) => {
+    const id = request.params.id
+    persons = persons.filter(p => p.id !== id)
+
+    response.status(204).end()
+})
+
+const generateId = () => {
+    return String(Math.floor(Math.random() * 100000));
+}
+
+app.post('/api/persons', (request, response) => {
+    const body = request.body
+
+    if (!body.name && !body.number) {
+        return response.status(400).json({
+            error: 'missing name and number'
+        })
+    }
+
+    if (!body.name) {
+        return response.status(400).json({
+            error: 'missing name'
+        })
+    }
+
+    if (!body.number) {
+        return response.status(400).json({
+            error: 'missing number'
+        })
+    }
+
+    const personExists = persons.find(p => body.name === p.name)
+
+    if (personExists) {
+        return response.status(400).json({
+            error: 'name must be unique'
+        })
+    }
+
+    let newId = generateId();
+
+    const person = {
+        id: newId,
+        name: body.name,
+        number: body.number,
+    }
+
+    persons = persons.concat(person)
+
+    response.json(persons)
+})
+
+const PORT = process.env.PORT || 3001
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+})
